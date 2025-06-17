@@ -6,9 +6,11 @@
 <title>Local Network Code Share - Peer to Peer</title>
 <!-- Material Icons for UI -->
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
-<!-- CodeMirror for code editor (Lite build) -->
+<!-- CodeMirror for code editor -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.12/lib/codemirror.min.css" />
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter&display=swap');
+
   /* Modern glass morphism background */
   body {
     margin: 0;
@@ -29,7 +31,6 @@
     display: flex;
     align-items: center;
     padding: 0 24px;
-    box-sizing: border-box;
     z-index: 10;
   }
   header .logo {
@@ -45,8 +46,8 @@
     grid-template-columns: 1fr 1fr;
     gap: 24px;
     padding: 24px;
-    box-sizing: border-box;
     min-height: calc(100vh - 64px - 48px);
+    box-sizing: border-box;
   }
   @media (max-width: 767px) {
     main {
@@ -78,7 +79,7 @@
   }
   textarea#signalingInput {
     width: 100%;
-    height: 80px;
+    height: 120px;
     border-radius: 12px;
     border: none;
     resize: vertical;
@@ -159,42 +160,72 @@
   .status.disconnected {
     color: #f87171;
   }
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  ::-webkit-scrollbar-track {
+    background: rgba(255 255 255 / 0.05);
+    border-radius: 6px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(255 255 255 / 0.2);
+    border-radius: 6px;
+    border: 3px solid rgba(0 0 0 / 0);
+    background-clip: padding-box;
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">
+  <div class="logo" tabindex="0" aria-label="Local Network Code Share Logo">
     <span class="material-icons-outlined" aria-hidden="true">share</span> Local Code Share
   </div>
 </header>
 
 <main>
-  <section aria-label="Code to share (Local)">
+  <section aria-label="Code to share (Local)" role="region">
     <h2><span class="material-icons-outlined" aria-hidden="true">code</span> Your Code</h2>
-    <textarea id="localCode" aria-label="Your code editor"></textarea>
+    <textarea id="localCode" aria-label="Your code editor" spellcheck="false"></textarea>
   </section>
 
-  <section aria-label="Received code from peer (Remote)">
+  <section aria-label="Received code from peer (Remote)" role="region">
     <h2><span class="material-icons-outlined" aria-hidden="true">input</span> Received Code</h2>
     <textarea id="remoteCode" readonly aria-label="Received code from peer"></textarea>
   </section>
 
-  <section aria-label="Connection setup" style="grid-column: span 2;">
+  <section aria-label="Connection setup" role="region" style="grid-column: span 2;">
     <h2><span class="material-icons-outlined" aria-hidden="true">settings_input_antenna</span> Connection Setup</h2>
 
-    <div class="flex-row">
-      <button id="createOfferBtn" class="btn">Create Offer</button>
-      <button id="createAnswerBtn" class="btn" disabled>Create Answer</button>
-      <button id="copySignalBtn" class="btn" disabled><span class="material-icons-outlined">content_copy</span> Copy Signal</button>
-      <button id="pasteSignalBtn" class="btn"><span class="material-icons-outlined">content_paste</span> Paste Signal & Connect</button>
-      <button id="disconnectBtn" class="btn" disabled><span class="material-icons-outlined">close</span> Disconnect</button>
+    <div class="flex-row" role="group" aria-label="Connection controls">
+      <button id="createOfferBtn" class="btn" aria-describedby="descCreateOffer">Create Offer</button>
+      <button id="createAnswerBtn" class="btn" aria-describedby="descCreateAnswer" disabled>Create Answer</button>
+      <button id="copySignalBtn" class="btn" aria-describedby="descCopySignal" disabled><span class="material-icons-outlined">content_copy</span> Copy Signal</button>
+      <button id="pasteSignalBtn" class="btn" aria-describedby="descPasteSignal">Paste Signal & Connect</button>
+      <button id="disconnectBtn" class="btn" aria-describedby="descDisconnect" disabled><span class="material-icons-outlined">close</span> Disconnect</button>
     </div>
 
+    <span id="descCreateOffer" hidden>Create connection offer (start connection)</span>
+    <span id="descCreateAnswer" hidden>Create connection answer (reply connection)</span>
+    <span id="descCopySignal" hidden>Copy the signaling data to share</span>
+    <span id="descPasteSignal" hidden>Paste signaling data from peer here and connect</span>
+    <span id="descDisconnect" hidden>Disconnect the current connection</span>
+
     <label for="signalingInput">Paste Signal JSON Here</label>
-    <textarea id="signalingInput" aria-describedby="signalHelp" placeholder="Paste offer/answer JSON signal here..."></textarea>
+    <textarea id="signalingInput" aria-describedby="signalHelp" placeholder="Paste offer/answer/candidate JSON signal here..." spellcheck="false"></textarea>
 
     <div id="connectionStatus" class="status disconnected" role="status" aria-live="polite">Disconnected</div>
+
+    <div style="margin-top: 12px; font-size: 0.9rem; color: #a8b6dc; user-select:none; max-width: 800px;">
+      <strong>Instructions:</strong> Use "Create Offer" on one device, copy the signaling data, and share it with the other device.<br />
+      On the other device, paste the signaling data and click "Paste Signal & Connect" to create an answer.<br />
+      Copy the answer signaling data from the second device and paste it back into the first device's box and click "Paste Signal & Connect" to finalize connection.<br />
+      Once connected, code typed in "Your Code" is instantly shared to "Received Code" on the other device.<br />
+      Click "Disconnect" to end the session.<br />
+      <em>Make sure both devices use latest Chrome, Firefox or Edge and are on the same local network.</em>
+    </div>
   </section>
 </main>
 
@@ -202,14 +233,13 @@
   Made with &hearts; for local peer-to-peer code sharing
 </footer>
 
-<!-- Load CodeMirror -->
+<!-- CodeMirror -->
 <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.12/lib/codemirror.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.12/mode/javascript/javascript.js"></script>
 
 <script>
   const localCodeEl = document.getElementById('localCode');
   const remoteCodeEl = document.getElementById('remoteCode');
-
   const signalingInput = document.getElementById('signalingInput');
   const createOfferBtn = document.getElementById('createOfferBtn');
   const createAnswerBtn = document.getElementById('createAnswerBtn');
@@ -232,7 +262,7 @@
     theme: "default",
     lineNumbers: true,
     lineWrapping: true,
-    readOnly: 'nocursor'
+    readOnly: true
   });
 
   // WebRTC variables
@@ -240,12 +270,14 @@
   let dataChannel = null;
   let isConnected = false;
 
-  // STUN servers for NAT traversal
+  // STUN server configuration
   const configuration = {
     iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
   };
 
-  // Update UI state function
+  let signalingData = null;
+
+  // UI update helper
   function updateUIState() {
     createOfferBtn.disabled = isConnected;
     createAnswerBtn.disabled = isConnected;
@@ -254,25 +286,25 @@
     pasteSignalBtn.disabled = false;
   }
 
-  let signalingData = null;
-
-  // Create peer connection and handlers
+  // Create RTCPeerConnection and handlers
   function createPeerConnection() {
     peerConnection = new RTCPeerConnection(configuration);
 
     peerConnection.onicecandidate = event => {
-      if(event.candidate === null) {
-        // ICE gathering complete
-        const localDescription = peerConnection.localDescription;
-        signalingData = JSON.stringify(localDescription);
+      if(event.candidate) {
+        // Send candidate info inside signalingInput to share separately if needed
+        // But currently we rely on full SDP with candidates together
+      } else {
+        // ICE gathering complete — localDescription has ICE candidates included
+        signalingData = JSON.stringify(peerConnection.localDescription);
         signalingInput.value = signalingData;
         copySignalBtn.disabled = false;
       }
     };
 
     peerConnection.onconnectionstatechange = () => {
-      if(!peerConnection) return;
-      switch (peerConnection.connectionState) {
+      if (!peerConnection) return;
+      switch(peerConnection.connectionState) {
         case 'connected':
           isConnected = true;
           connectionStatus.textContent = 'Connected';
@@ -294,56 +326,56 @@
       dataChannel = event.channel;
       setupDataChannel();
     };
+
   }
 
-  // Setup data channel events
+  // Setup DataChannel handlers
   function setupDataChannel() {
     if(!dataChannel) return;
 
     dataChannel.onopen = () => {
-      console.log('Data channel opened');
       isConnected = true;
-      connectionStatus.textContent = 'Connected';
-      connectionStatus.className = 'status connected';
+      connectionStatus.textContent = "Connected";
+      connectionStatus.className = "status connected";
       updateUIState();
     };
     dataChannel.onclose = () => {
-      console.log('Data channel closed');
       isConnected = false;
-      connectionStatus.textContent = 'Disconnected';
-      connectionStatus.className = 'status disconnected';
+      connectionStatus.textContent = "Disconnected";
+      connectionStatus.className = "status disconnected";
       updateUIState();
     };
-    dataChannel.onerror = error => {
-      console.error('Data channel error:', error);
+    dataChannel.onerror = (event) => {
+      console.error("Data channel error:", event);
     };
     dataChannel.onmessage = event => {
-      try {
-        // Received code update string from peer
-        remoteEditor.setValue(event.data);
-      } catch(e) {
-        console.error('Failed to parse received data', e);
-      }
+      // Update remote editor with received code
+      remoteEditor.setValue(event.data);
     };
   }
 
-  // Create an offer (starting peer)
+  // Create offer (initiator)
   async function createOffer() {
     createPeerConnection();
 
     dataChannel = peerConnection.createDataChannel('codeShare');
     setupDataChannel();
 
-    const offer = await peerConnection.createOffer();
-    await peerConnection.setLocalDescription(offer);
+    try {
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+      // We wait for ICE gathering to complete to get full SDP for sending in copy
+    } catch (err) {
+      alert('Failed to create offer: ' + err);
+    }
   }
 
-  // Create an answer (joining peer)
+  // Create answer (receiver)
   async function createAnswer() {
     createPeerConnection();
   }
 
-  // Handle incoming signaling JSON pasted by user
+  // Handle pasted signaling data (offer/answer)
   async function handlePasteSignal() {
     if (!signalingInput.value) {
       alert('Please paste a valid signaling JSON string.');
@@ -356,43 +388,49 @@
       alert('Invalid JSON string. Please check your input.');
       return;
     }
-
     if (!peerConnection) {
+      // If no peer connection, assume we are answerer creating peer connection
       await createAnswer();
     }
 
-    if (signal.type === 'offer') {
-      await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
-      const answer = await peerConnection.createAnswer();
-      await peerConnection.setLocalDescription(answer);
-      // Show answer SDP for copy
-      signalingData = JSON.stringify(peerConnection.localDescription);
-      signalingInput.value = signalingData;
-      copySignalBtn.disabled = false;
-      createAnswerBtn.disabled = true;
-    } else if (signal.type === 'answer') {
-      await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
-    } else if (signal.candidate) {
-      try {
+    try {
+      if (signal.type === 'offer') {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+        // Create answer now
+        const answer = await peerConnection.createAnswer();
+        await peerConnection.setLocalDescription(answer);
+        // ICE candidates included, waiting for onicecandidate to finalize
+      } else if (signal.type === 'answer') {
+        await peerConnection.setRemoteDescription(new RTCSessionDescription(signal));
+      } else if (signal.candidate) {
+        // Add ICE candidate (rare with this manual signaling)
+        // This branch here for robustness
         await peerConnection.addIceCandidate(new RTCIceCandidate(signal));
-      } catch (e) {
-        console.warn('Error adding ICE candidate', e);
+      } else {
+        alert('Unknown signaling data format.');
       }
-    } else {
-      alert('Unknown signaling data type.');
+    } catch (e) {
+      alert('Failed handling signaling data: ' + e);
+      return;
     }
     updateUIState();
   }
 
-  // Send code updates on local editor changes (debounced)
+  // Send code updates from local editor to remote peer with debounce
   let sendTimeout = null;
   const DEBOUNCE_DELAY = 300;
   localEditor.on('change', () => {
-    if (!isConnected || !dataChannel || dataChannel.readyState !== 'open') return;
-    if (sendTimeout) clearTimeout(sendTimeout);
+    if (!isConnected || !dataChannel || dataChannel.readyState !== 'open') {
+      return;
+    }
+    if(sendTimeout) clearTimeout(sendTimeout);
     sendTimeout = setTimeout(() => {
-      const codeToSend = localEditor.getValue();
-      dataChannel.send(codeToSend);
+      try {
+        const codeToSend = localEditor.getValue();
+        dataChannel.send(codeToSend);
+      } catch (e) {
+        console.error('Failed to send data:', e);
+      }
     }, DEBOUNCE_DELAY);
   });
 
@@ -403,6 +441,7 @@
     signalingInput.value = '';
     signalingData = null;
     copySignalBtn.disabled = true;
+    disconnectBtn.disabled = false;
     createOffer();
   });
 
@@ -412,6 +451,7 @@
     signalingInput.value = '';
     signalingData = null;
     copySignalBtn.disabled = true;
+    disconnectBtn.disabled = false;
     createAnswer();
   });
 
@@ -450,6 +490,11 @@
   copySignalBtn.disabled = true;
   createAnswerBtn.disabled = true;
   disconnectBtn.disabled = true;
+
+  // Accessibility: focus the local editor on load
+  window.addEventListener('DOMContentLoaded', () => {
+    localEditor.focus();
+  });
 </script>
 
 </body>
