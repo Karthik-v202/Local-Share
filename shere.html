@@ -1,51 +1,89 @@
 <!DOCTYPE html>
 <html lang="en" class="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Enable Location</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="bg-gray-900 text-white min-h-screen flex items-center justify-center px-4">
-    <div class="max-w-xl text-center p-8 bg-gray-800 rounded-2xl shadow-lg">
-      <h1 class="text-3xl font-bold mb-4">📍 Enhance Your Experience</h1>
-      <p class="text-lg text-gray-300 mb-6">
-        We use your location to show relevant content near you like local news, weather updates, and nearby events.
-        Your location is never stored or shared.
-      </p>
-      <button
-        onclick="getLocation()"
-        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-lg font-medium transition">
-        Turn On Location
-      </button>
-      <p id="status" class="mt-4 text-green-400 hidden"></p>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Code Share (Local)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+</head>
+<body class="bg-gray-900 text-white min-h-screen p-4 flex items-center justify-center">
+  <div class="w-full max-w-3xl bg-gray-800 p-6 rounded-xl shadow-lg">
+    <h1 class="text-2xl font-bold mb-4">📤 Code Share Across Devices</h1>
+
+    <textarea id="codeArea" class="w-full h-64 p-4 rounded text-sm bg-gray-900 text-green-300 font-mono outline-none resize-none mb-4" placeholder="Write or paste your code here..."></textarea>
+
+    <div class="flex flex-wrap justify-between gap-2">
+      <button onclick="saveCode()" class="bg-blue-600 px-4 py-2 rounded hover:bg-blue-700">💾 Save Code</button>
+      <button onclick="loadCode()" class="bg-green-600 px-4 py-2 rounded hover:bg-green-700">🔄 Load Code</button>
+      <button onclick="downloadCode()" class="bg-yellow-600 px-4 py-2 rounded hover:bg-yellow-700">⬇️ Download</button>
+
+      <label class="bg-purple-600 px-4 py-2 rounded hover:bg-purple-700 cursor-pointer">
+        ⬆️ Upload
+        <input type="file" id="fileInput" class="hidden" accept=".txt,.py,.js" onchange="uploadFile(event)">
+      </label>
     </div>
 
-    <script>
-      function getLocation() {
-        const status = document.getElementById("status");
-        if (!navigator.geolocation) {
-          status.classList.remove("hidden");
-          status.classList.remove("text-green-400");
-          status.classList.add("text-red-400");
-          status.textContent = "Geolocation is not supported by your browser.";
-        } else {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              status.classList.remove("hidden");
-              status.classList.remove("text-red-400");
-              status.classList.add("text-green-400");
-              status.textContent = "✅ Location access granted. Thank you!";
-            },
-            (error) => {
-              status.classList.remove("hidden");
-              status.classList.remove("text-green-400");
-              status.classList.add("text-red-400");
-              status.textContent = "❌ Location access denied. Please allow location access for best experience.";
-            }
-          );
-        }
+    <p id="status" class="text-sm text-gray-400 mt-4"></p>
+
+    <div class="mt-8 text-center">
+      <h2 class="text-lg font-semibold mb-2">📱 Scan QR to Open</h2>
+      <canvas id="qrcode" class="mx-auto border-2 border-gray-600 p-2 bg-white"></canvas>
+      <p class="text-sm text-gray-400 mt-2">Connect devices on the same Wi-Fi</p>
+    </div>
+  </div>
+
+  <script>
+    // Save to localStorage
+    function saveCode() {
+      const code = document.getElementById("codeArea").value;
+      localStorage.setItem("shared_code", code);
+      document.getElementById("status").textContent = "✅ Code saved on this device.";
+    }
+
+    // Load from localStorage
+    function loadCode() {
+      const code = localStorage.getItem("shared_code") || "";
+      document.getElementById("codeArea").value = code;
+      document.getElementById("status").textContent = "✅ Code loaded.";
+    }
+
+    // Download code as file
+    function downloadCode() {
+      const code = document.getElementById("codeArea").value;
+      const blob = new Blob([code], { type: "text/plain" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "shared_code.txt";
+      a.click();
+    }
+
+    // Upload file and read contents
+    function uploadFile(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById("codeArea").value = e.target.result;
+          document.getElementById("status").textContent = `✅ Loaded file: ${file.name}`;
+        };
+        reader.readAsText(file);
       }
-    </script>
-  </body>
+    }
+
+    // Generate QR code using local IP and port
+    window.onload = () => {
+      fetch('https://api.ipify.org?format=json')
+        .then(res => res.json())
+        .then(data => {
+          const localIP = location.hostname; // Better for LAN
+          const qr = new QRious({
+            element: document.getElementById("qrcode"),
+            value: `http://${localIP}:8000/code-share.html`,
+            size: 200
+          });
+        });
+    };
+  </script>
+</body>
 </html>
