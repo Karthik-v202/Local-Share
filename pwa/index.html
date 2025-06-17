@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>🔊 Walkie Talkie</title>
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#111111" />
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link rel="icon" href="icon.png" type="image/png">
+</head>
+<body class="bg-gray-900 text-white flex flex-col items-center justify-center h-screen p-4">
+  <h1 class="text-3xl font-bold mb-4">🚀 LAN Walkie Talkie</h1>
+  <div class="mb-4">
+    <input id="roomInput" type="text" placeholder="Enter Room ID" class="text-black p-2 rounded w-64"/>
+    <button onclick="joinRoom()" class="bg-green-500 px-4 py-2 rounded ml-2">Join</button>
+  </div>
+  <button id="talkBtn" disabled class="bg-blue-600 px-6 py-3 rounded text-xl">🎤 Hold to Talk</button>
+
+  <script>
+    let localStream, peerConnection;
+    let roomId = "";
+    const servers = { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] };
+    const talkBtn = document.getElementById('talkBtn');
+
+    async function joinRoom() {
+      roomId = document.getElementById("roomInput").value.trim();
+      if (!roomId) return alert("Enter a room ID");
+
+      talkBtn.disabled = false;
+      localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      const signaling = new BroadcastChannel(roomId);
+      peerConnection = new RTCPeerConnection(servers);
+
+      peerConnection.ontrack = (event) => {
+        const audio = new Audio();
+        audio.srcObject = event.streams[0];
+        audio.play();
+      };
+
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          signaling.postMessage({ type: "candidate", candidate: event.candidate });
+        }
+      };
+
+      signaling.onmessage = async (msg) => {
+        if (msg.data.type === "offer") {
+          await peerConnection.setRemoteDescription(new RTCSessionDescription(msg.data.offer));
+          localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+          const answer = await peerConnection.createAnswer();
+          await peerConnection.setLocalDescription(answer);
+          signaling.postMessage({ type: "answer", answer });
+        } else if (msg.data.type === "answer") {
+          await peerConnection.setRemoteDescription(new RTCSessionDescription(msg.data.answer));
+        } else if (msg.data.type === "candidate") {
+          try {
+            await peerConnection.addIceCandidate(msg.data.candidate);
+          } catch (e) {}
+        }
+      };
+
+      talkBtn.addEventListener("mousedown", () => {
+        localStream.getAudioTracks()[0].enabled = true;
+      });
+      talkBtn.addEventListener("mouseup", () => {
+        localStream.getAudioTracks()[0].enabled = false;
+      });
+    }
+
+    // Register service worker (for PWA)
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js');
+    }
+  </script>
+</body>
+</html>
