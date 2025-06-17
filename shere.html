@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Enable Location</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-gray-900 text-white min-h-screen flex items-center justify-center px-4">
+    <div class="max-w-xl text-center p-8 bg-gray-800 rounded-2xl shadow-lg">
+      <h1 class="text-3xl font-bold mb-4">📍 Enhance Your Experience</h1>
+      <p class="text-lg text-gray-300 mb-6">
+        We use your location to show relevant content near you like local news, weather updates, and nearby events.
+        Your location is never stored or shared.
+      </p>
+      <button
+        onclick="getLocation()"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl text-lg font-medium transition">
+        Turn On Location
+      </button>
+      <p id="status" class="mt-4 text-green-400 hidden"></p>
+    </div>
+
+    <script>
+      function getLocation() {
+        const status = document.getElementById("status");
+        if (!navigator.geolocation) {
+          status.classList.remove("hidden");
+          status.classList.remove("text-green-400");
+          status.classList.add("text-red-400");
+          status.textContent = "Geolocation is not supported by your browser.";
+        } else {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              status.classList.remove("hidden");
+              status.classList.remove("text-red-400");
+              status.classList.add("text-green-400");
+              status.textContent = "✅ Location access granted. Thank you!";
+            },
+            (error) => {
+              status.classList.remove("hidden");
+              status.classList.remove("text-green-400");
+              status.classList.add("text-red-400");
+              status.textContent = "❌ Location access denied. Please allow location access for best experience.";
+            }
+          );
+        }
+      }
+    </script>
+  </body>
+</html>
